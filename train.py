@@ -14,8 +14,8 @@ from pathlib import Path
 # Huggingface datasets and tokenizers
 from datasets import load_dataset
 from tokenizers import Tokenizer
-from tokenizers.models import CharLevel
-from tokenizers.trainers import CharLevelTrainer
+from tokenizers.models import WordLevel
+from tokenizers.trainers import WordLevelTrainer
 from tokenizers.pre_tokenizers import Whitespace
 
 from torch.utils.tensorboard import SummaryWriter
@@ -81,17 +81,20 @@ def get_or_build_tokenizer(config, ds):
     tokenizer_path = Path(config['tokenizer_file'])
     if not Path.exists(tokenizer_path):
         print("Building a new tokenizer...")
-        tokenizer = Tokenizer(CharLevel()) # CharLevel is ideal for SMILES
+        # CHANGED: Use WordLevel model
+        tokenizer = Tokenizer(WordLevel(unk_token="[UNK]")) 
         tokenizer.pre_tokenizer = Whitespace()
-        trainer = CharLevelTrainer(special_tokens=["[UNK]", "[PAD]", "[SOS]", "[EOS]"], min_frequency=2)
         
-        # Create an iterator for your text data
-        def get_all_sentences():
-            # IMPORTANT: Change 'text_column_name' to the actual column name of your SMILES strings
+        # CHANGED: Use WordLevelTrainer
+        trainer = WordLevelTrainer(special_tokens=["[UNK]", "[PAD]", "[SOS]", "[EOS]"], min_frequency=2)
+        
+        # This iterator now yields lists of characters, which the WordLevelTrainer will learn as tokens
+        def get_all_sentences_iterator():
             for item in ds:
-                yield item['smiles'] 
+                # IMPORTANT: Change 'text_column_name' to your SMILES column name
+                yield list(item['text_column_name']) 
 
-        tokenizer.train_from_iterator(get_all_sentences(), trainer=trainer)
+        tokenizer.train_from_iterator(get_all_sentences_iterator(), trainer=trainer)
         tokenizer.save(str(tokenizer_path))
     else:
         print("Loading existing tokenizer.")
