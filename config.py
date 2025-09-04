@@ -16,7 +16,7 @@ def get_config():
         "d_ff": 2048,
 
         # --- Data & Model Paths ---
-        "datasource": "MolGPT\250k_rndm_zinc_drugs_clean_3.csv", # CHANGED: Use your Hugging Face dataset name or local path
+        "datasource": "basu369victor/zinc250k", # CHANGED: Use your Hugging Face dataset name or local path
         "model_folder": "smiles_weights",         # CHANGED: More descriptive folder name
         "model_basename": "mol_gen_tmodel_",      # CHANGED: More descriptive model name
         "preload": "latest",
